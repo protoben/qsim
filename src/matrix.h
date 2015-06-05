@@ -137,4 +137,10 @@ M qop_rotate_x(double angle);
 M qop_rotate_y(double angle);
 M qop_rotate_z(double angle);
 
+/*
+ * Generate an n-dimensional controlled not gate with the given control and
+ * target.
+ */
+M qop_make_cnot(unsigned width, unsigned control, unsigned target);
+
 #endif /* QSIM_MATRIX_H */

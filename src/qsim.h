@@ -36,6 +36,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <string.h>
+#include <time.h>
 
 #include "matrix.h"
 #include "qregister.h"

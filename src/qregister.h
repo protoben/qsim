@@ -50,5 +50,6 @@ void qr_init(qreg *qr, unsigned width, unsigned value);
 void qr_free(qreg *qr);
 void qr_print(qreg *qr);
 void qr_evolve(qreg *qr, M op);
+unsigned qr_measure_all(qreg *qr);
 
 #endif /* QREG_H */

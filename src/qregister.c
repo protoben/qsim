@@ -118,3 +118,32 @@ void qr_evolve(qreg *qr, M op) {
 
   qr_bases_free(old_amps);
 }
+
+unsigned qr_measure_all(qreg *qr) {
+  double r = drand48(), p;
+  struct basis *cur = qr->amplitudes, *temp, *save = NULL;
+  bool done = false;
+
+  while(cur) {
+    p = cabs(cur->amplitude);
+    p *= p;
+
+    temp = cur->next;
+    if(r <= p && !done) {
+      save = cur;
+      done = true;
+    } else {
+      free(cur);
+      r -= p;
+    }
+    cur = temp;
+  }
+
+  assert(save != NULL);
+
+  save->amplitude = 1;
+  save->next = NULL;
+  qr->amplitudes = save;
+
+  return qr->amplitudes->basis;
+}

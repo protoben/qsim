@@ -90,72 +90,78 @@ void do_gate(qreg *regp, char *buf, unsigned line) {
   M gate, compound_gate;
   unsigned noperands, operands[regp->width];
   int i;
+  char operator;
 
   m_stack_push();
 
   while(isspace(*buf))
     ++buf;
 
-  switch(*buf) {
-    case 'X': case 'x': case 'n':
+  operator = tolower(*buf);
+
+  noperands = parse_operands(buf, operands, sizeof(operands) / sizeof(*operands));
+  DEBUG("with %u operands: %u, ...\n", noperands, operands[0]);
+
+  switch(operator) {
+    case 'x': case 'n':
       gate = X;
       DEBUG("Got X gate ");
       break;
-    case 'Y': case 'y':
+    case 'y':
       gate = Y;
       DEBUG("Got Y gate ");
       break;
-    case 'Z': case 'z':
+    case 'z':
       gate = Z;
       DEBUG("Got Z gate ");
       break;
-    case 'H': case 'h':
+    case 'h':
       gate = H;
       DEBUG("Got H gate ");
       break;
-    case 'S': case 's': case 'p':
+    case 's': case 'p':
       gate = S;
       DEBUG("Got S gate ");
       break;
-    case 'T': case 't':
+    case 't':
       gate = T;
       DEBUG("Got T gate ");
       break;
-    case 'C': case 'c':
-      gate = CX;
+    case 'c':
       DEBUG("Got CNOT gate ");
+      if(noperands != 2)
+        die(0, "Line %u: CNOT gate requires exactly 2 operands", line);
+      compound_gate = qop_make_cnot(regp->width, operands[0], operands[1]);
+      break;
     default:
       die(0, "An illegal gate got past the regex, somehow (line %u): %s", line, buf);
   }
 
-  noperands = parse_operands(buf, operands, sizeof(operands) / sizeof(*operands));
-  if(noperands > regp->width)
-    die(0, "Line %u: Too many operands", line);
-  if(!noperands)
-    die(0, "Line %u: Expected at least one operand", line);
-  if(gate == CX && noperands != 2)
-    die(0, "Line %u: CNOT gate requires exactly 2 operands", line);
-  DEBUG("with %u operands: %u, ...\n", noperands, operands[0]);
+  if(operator != 'c') {
+    if(noperands > regp->width)
+      die(0, "Line %u: Too many operands", line);
+    if(!noperands)
+      die(0, "Line %u: Expected at least one operand", line);
 
-  compound_gate = bit_in_ops(regp->width - 1, operands, noperands) ? gate : I2;
-  for(i = (int)regp->width - 2; i >= 0; --i)
-    if(bit_in_ops((unsigned)i, operands, noperands))
-      compound_gate = m_tensor(compound_gate, gate);
-    else
-      compound_gate = m_tensor(compound_gate, I2);
+    compound_gate = bit_in_ops(regp->width - 1, operands, noperands) ? gate : I2;
+    for(i = (int)regp->width - 2; i >= 0; --i)
+      if(bit_in_ops((unsigned)i, operands, noperands))
+        compound_gate = m_tensor(compound_gate, gate);
+      else
+        compound_gate = m_tensor(compound_gate, I2);
+  }
 
   qr_evolve(regp, compound_gate);
-    if(opts.singlestep) {
-      printf("|psi_%u> = ", line - 1);
-      qr_print(regp);
-      getchar();
-    }
+  if(opts.singlestep) {
+    printf("|psi_%u> = ", line - 1);
+    qr_print(regp);
+    getchar();
+  }
 
   m_stack_pop();
 }
 
-void processline(char *buf, regex_t reg_regex, regex_t gate_regex) {
-  static qreg reg = {0};
+void processline(char *buf, regex_t reg_regex, regex_t gate_regex, qreg *regp) {
   static bool reginit = false;
   static unsigned line = 0;
   unsigned i, regwidth;
@@ -165,13 +171,13 @@ void processline(char *buf, regex_t reg_regex, regex_t gate_regex) {
   if(!regexec(&reg_regex, buf, 0, NULL, 0)) {
     for(i = 0; *buf && !isdigit(buf[i]); ++i);
     regwidth = strtou_or_die(&buf[i], NULL, 0);
-    qr_init(&reg, regwidth, opts.input);
+    qr_init(regp, regwidth, opts.input);
     reginit = true;
     DEBUG("Initialized register with width=%u and value=%x\n", regwidth, opts.input);
 
     if(opts.singlestep) {
       printf("|psi_%u> = ", line - 1);
-      qr_print(&reg);
+      qr_print(regp);
       getchar();
     }
     return;
@@ -181,7 +187,7 @@ void processline(char *buf, regex_t reg_regex, regex_t gate_regex) {
     if(!reginit)
       die(0, "You must define a register width (register <width>) before any operations");
 
-    do_gate(&reg, buf, line);
+    do_gate(regp, buf, line);
   } else
     die(0, "Line %u does not appear to be a valid operation:\n%s", line, buf);
 }
@@ -193,6 +199,7 @@ void processfile(const char *filename) {
   static regex_t reg_regex, gate_regex;
   int err;
   char errbuf[1024];
+  qreg reg = {0};
   
   err = regcomp(&reg_regex, REG_LINE_REGEX, REG_EXTENDED | REG_NOSUB);
   if(err) {
@@ -209,11 +216,14 @@ void processfile(const char *filename) {
   while(getline(&buf, &len, fp) != -1) {
     if((nl = strchr(buf, '\n')))
       *nl = '\0';
-    processline(buf, reg_regex, gate_regex);
+    processline(buf, reg_regex, gate_regex, &reg);
   }
+
+  printf("result: %0#x\n", qr_measure_all(&reg));
 
   regfree(&reg_regex);
   regfree(&gate_regex);
+  qr_free(&reg);
   free(buf);
   fclose(fp);
 }
@@ -221,12 +231,12 @@ void processfile(const char *filename) {
 int main(int argc, char **argv) {
   m_stack_push();
   init_global_qops();
+  srand48(time(NULL));
 
   parseargs(argc, argv);
 
   processfile(opts.filename);
 
-  return 0;
-
   m_stack_pop();
+  return 0;
 }

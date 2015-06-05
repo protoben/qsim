@@ -50,6 +50,8 @@ int main(void) {
   m_print(m_mult(Z, Y));
   puts("");
   m_print(m_mult(m_tensor(H, H), m_mult(CX, m_tensor(H, H))));
+  puts("");
+  m_print(qop_make_cnot(2, 1, 0));
 
   if(!m_equal(m_mult(H, m_adjoint(H)), I2))
     puts("Something is wrong with the world");

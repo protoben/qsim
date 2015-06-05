@@ -259,3 +259,21 @@ M qop_rotate_z(double angle) {
   return m_create(2, 2, mdata(cexp(-I * (angle / 2)), 0,
                               0,                     cexp(I * (angle / 2))));
 }
+
+M qop_make_cnot(unsigned width, unsigned control, unsigned target) {
+  assert(width < 32);
+
+  unsigned d = 1 << width, c = 1 << control, t = 1 << target, x, y;
+  complex e[d * d];
+
+  for(y = 0; y < d; ++y)
+    for(x = 0; x < d; ++x)
+      if(y & c && x == (y ^ t))
+        e[y * d + x] = 1;
+      else if(!(y & c) && y == x)
+        e[y * d + x] = 1;
+      else
+        e[y * d + x] = 0;
+
+  return m_create(d, d, e);
+}
