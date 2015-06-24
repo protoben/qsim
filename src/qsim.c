@@ -90,7 +90,7 @@ void do_gate(qreg *regp, char *buf, unsigned line) {
   M gate, compound_gate;
   unsigned noperands, operands[regp->width];
   int i;
-  char operator;
+  char operator, modifier;
 
   m_stack_push();
 
@@ -98,9 +98,11 @@ void do_gate(qreg *regp, char *buf, unsigned line) {
     ++buf;
 
   operator = tolower(*buf);
+  while(isalpha(*buf))
+      ++buf;
+  modifier = *buf;
 
   noperands = parse_operands(buf, operands, sizeof(operands) / sizeof(*operands));
-  DEBUG("with %u operands: %u, ...\n", noperands, operands[0]);
 
   switch(operator) {
     case 'x': case 'n':
@@ -136,12 +138,16 @@ void do_gate(qreg *regp, char *buf, unsigned line) {
     default:
       die(0, "An illegal gate got past the regex, somehow (line %u): %s", line, buf);
   }
+  DEBUG("with %u operands: %u, ...\n", noperands, operands[0]);
 
   if(operator != 'c') {
     if(noperands > regp->width)
       die(0, "Line %u: Too many operands", line);
     if(!noperands)
       die(0, "Line %u: Expected at least one operand", line);
+
+    if(modifier == '*')
+      gate = m_adjoint(gate);
 
     compound_gate = bit_in_ops(regp->width - 1, operands, noperands) ? gate : I2;
     for(i = (int)regp->width - 2; i >= 0; --i)
@@ -200,6 +206,7 @@ void processfile(const char *filename) {
   int err;
   char errbuf[1024];
   qreg reg = {0};
+  ssize_t rd;
   
   err = regcomp(&reg_regex, REG_LINE_REGEX, REG_EXTENDED | REG_NOSUB);
   if(err) {
@@ -213,9 +220,13 @@ void processfile(const char *filename) {
     die(0, "regcomp(%s): %s", GATE_LINE_REGEX, errbuf);
   }
 
-  while(getline(&buf, &len, fp) != -1) {
+  while((rd = getline(&buf, &len, fp)) != -1) {
+    if(!rd)
+      continue;
+
     if((nl = strchr(buf, '\n')))
       *nl = '\0';
+
     processline(buf, reg_regex, gate_regex, &reg);
   }
 

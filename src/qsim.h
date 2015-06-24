@@ -58,7 +58,7 @@
 #endif
 
 #define CSD "[[:digit:]]+(,[[:space:]]*[[:digit:]]+)*"
-#define GATE "(X|x|not|Y|y|Z|z|H|hadamard|h|S|phase|s|T|t|CX|CNOT|cx|cnot)"
+#define GATE "(X|x|not|Y|y|Z|z|H|hadamard|h|S|phase|s|T|t|CX|CNOT|cx|cnot)\\*?"
 #define GATE_LINE_REGEX "^[[:space:]]*" GATE "[[:space:]]+" CSD "[[:space:]]*$"
 
 #define REGISTER "(REGISTER|REG|register|reg)"
