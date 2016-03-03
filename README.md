@@ -32,7 +32,7 @@ Each line but the first specifies a sequential quantum gate to apply to the
 register of qubits. Blank lines are ignored.
 
 Qasm provides a small but universal set of gates: `X`, `Y`, `Z`, `S`, `T`,
-`hadamard`, and `cnot`. Any gate may optionally be followed by `\*` to indicate
+`hadamard`, and `cnot`. Any gate may optionally be followed by `*` to indicate
 that the conjugate transpose of that gate should be used. The `cnot` gate
 expects exactly two comma-separated operands, refering to the control and target
 qubits, in that order. All other gates can take an arbitrary number of
