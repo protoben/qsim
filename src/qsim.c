@@ -227,7 +227,8 @@ void processfile(const char *filename) {
     if((nl = strchr(buf, '\n')))
       *nl = '\0';
 
-    processline(buf, reg_regex, gate_regex, &reg);
+    if(*buf != '\0')
+      processline(buf, reg_regex, gate_regex, &reg);
   }
 
   printf("result: %0#x\n", qr_measure_all(&reg));
