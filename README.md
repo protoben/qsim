@@ -18,7 +18,7 @@ Usage
 
     qsim <flags> -f <qasm_file> <initial_register_value>
 
-##### Flags
+###### Flags
 - `-f` Specify qasm file to read operations from. This is required for now.
   In the future, this will be optional in order to allow qSim to function as
   a repl.
