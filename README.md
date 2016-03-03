@@ -31,14 +31,14 @@ should have the extension `.q` or `.Q`, although technically qSim doesn't care.
 Each line but the first specifies a sequential quantum gate to apply to the
 register of qubits. Blank lines are ignored.
 
-Qasm provides a small but universal set of gates: `X`, `Y, `Z`, `S`, `T`,
+Qasm provides a small but universal set of gates: `X`, `Y`, `Z`, `S`, `T`,
 `hadamard`, and `cnot`. Any gate may optionally be followed by `\*` to indicate
 that the conjugate transpose of that gate should be used. The `cnot` gate
 expects exactly two comma-separated operands, refering to the control and target
 qubits, in that order. All other gates can take an arbitrary number of
 operands, up to the width of the register, meaning that the operation should be
 applied to the qubits in parallel. Bit positions are specified in big-endian
-order, with an LSB index of `0`.
+order, with an LSB index of 0.
 
 Each file must begin with a line of the form `reg SIZE`, where `SIZE` is the
 number of qubits in the single register, up to a max of 32. The initial value of
@@ -87,6 +87,6 @@ are qSim's:
   rather than producing a sane error message.
 - Empty qasm files cause an assert failure, rather than a sane error message.
 - Because of the exponential blowup in number of states, using register widths
-  greater than about 9 tends to cause stack overflow exceptions.
+  greater than about 9 tends to cause stack overflows.
 - Specifying qubit positions outside the register silently and harmlessly fails,
   whereas it should probably cause a warning or an error.
