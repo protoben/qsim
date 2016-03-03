@@ -1,4 +1,4 @@
 qSim
 ====
 
-A quantum computer simlator.
+A quantum computer simulator.
