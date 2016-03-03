@@ -64,8 +64,6 @@ void qr_print(qreg *qr) {
                       ket_to_str(buf2, 64, cur->basis, qr->width));
     if(cur->next)
       fputs(" + ", stdout);
-    else
-      puts("");
   }
 }
 
