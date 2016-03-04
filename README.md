@@ -66,7 +66,7 @@ collapsing the distribution introduced by the superposition of qubits):
     |psi_4> = (0.5) |0010> + (-0.5i) |0011> + (-0.5i) |0100> + (-0.5) |0101>
     result: 0x3
 
-Qasm allows the following variations allowed for keywords:
+Qasm allows the following variations are allowed for keywords:
 
     X|x|not
     Y|y
